@@ -1,5 +1,5 @@
-download.file("http://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip ","Dataset.zip", mode="wb")
-unzip("Dataset.zip")
+#download.file("http://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip ","Dataset.zip", mode="wb")
+#unzip("Dataset.zip")
 
 #set working path
 dir <- file.path("./" , "UCI HAR Dataset")
@@ -16,14 +16,15 @@ subjectTest  <- read.table(file.path(dir, "test" , "subject_test.txt"),header = 
 featuresTest  <- read.table(file.path(dir, "test" , "X_test.txt" ),header = FALSE)
 featuresTrain <- read.table(file.path(dir, "train", "X_train.txt"),header = FALSE)
 
-#1.Concatenate the data tables by rows (training and test sets)
+#1. Concatenate the data tables by rows (training and test sets)
 subject <- rbind(subjectTrain, subjectTest)
 activity<- rbind(activityTrain, activityTest)
 features<- rbind(featuresTrain, featuresTest)
 
-#2.set names to variables
+#set names to variables
 names(subject)<-c("subject")
 names(activity)<- c("activity")
+#load features' heading
 featuresNames <- read.table(file.path(dir, "features.txt"),head=FALSE)
 names(features)<- featuresNames$V2
 
@@ -32,16 +33,14 @@ dataCombine <- cbind(subject, activity)
 Data <- cbind(features, dataCombine)
 
 #2.Extracts only the measurements on the mean and standard deviation for each measurement. 
-matches <- grep("(mean|std)\\(\\)", names(Data))
-c(as.character(matches), "subject", "activity" )
+matches<-featuresNames$V2[grep("mean\\(\\)|std\\(\\)", featuresNames$V2)]
+selectedNames <-c(as.character(matches), "subject", "activity" )
 
 #3 Uses descriptive activity names to name the activities in the data set
 Data<-subset(Data,select=selectedNames)
-activityLabels <- read.table(file.path(dir, "activity_labels.txt"),header = FALSE)
 
 #4 Appropriately labels the data set with descriptive variable names. 
-# Change t to Time, f to Frequency, mean() to Mean and std() to StdDev
-  # Remove extra dashes and BodyBody naming error from original feature names
+# Change t to Time, f to Frequency
 names(Data)<-gsub("^t", "time", names(Data))
 names(Data)<-gsub("^f", "frequency", names(Data))
 names(Data)<-gsub("Acc", "Accelerometer", names(Data))
@@ -54,17 +53,6 @@ library(plyr);
 Data2<-aggregate(. ~subject + activity, Data, mean)
 Data2<-Data2[order(Data2$subject,Data2$activity),]
 
-write.table(Data2, file = "tidydata.txt",row.name=FALSE)
+write.table(Data2, file = "averages_data.txt",row.name=FALSE)
 
-# Use to check that the tidyMeans.txt is properly readable
-#checkData <- function() {
- t<- read.table("tidydata.txt", header = TRUE)
-#}
-  head(t)
-  str(t)
-  
-  t2<- read.table("tidydata2.txt", header = TRUE)
-  #}
-  head(t2)
-  str(t2)
-  
+
